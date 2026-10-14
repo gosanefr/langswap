@@ -1,0 +1,63 @@
+{
+  "build": "2026-10-14T05:17:34.122Z",
+  "pipelineVersion": "1.0.0",
+  "dumpSet": "2026-10-13",
+  "langs": [
+    "fr",
+    "en",
+    "es",
+    "de",
+    "it",
+    "pt"
+  ],
+  "license": {
+    "name": "CC BY-SA 4.0",
+    "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  "files": {
+    "base": {
+      "file": "https://github.com/gosanefr/langswap/releases/download/packs-20261014-0517/base.sqlite.xz",
+      "bytes": 11104912,
+      "sqliteBytes": 30560256,
+      "sha256": "1bb4498cf56b9e6546c9073fd9da13327d476b53fb14044bc0735d08beebe3bf"
+    },
+    "pack-fr": {
+      "file": "https://github.com/gosanefr/langswap/releases/download/packs-20261014-0517/pack-fr.sqlite.xz",
+      "bytes": 21204916,
+      "sqliteBytes": 136306688,
+      "sha256": "91aa8afc3f2cc0d88f4a2cb4aa1e8bdc61a82089e8a3433361f5296e2b50b31e"
+    },
+    "pack-en": {
+      "file": "https://github.com/gosanefr/langswap/releases/download/packs-20261014-0517/pack-en.sqlite.xz",
+      "bytes": 16191356,
+      "sqliteBytes": 69677056,
+      "sha256": "7d993d0474273773b61ca54c08040d79efece655672dee9da8b2979847f5e806"
+    },
+    "pack-es": {
+      "file": "https://github.com/gosanefr/langswap/releases/download/packs-20261014-0517/pack-es.sqlite.xz",
+      "bytes": 17181108,
+      "sqliteBytes": 126996480,
+      "sha256": "6e97eeb5e1f119546a53442f82a2773973ebc0c09e7f5f5390ac6f1f96fdc8cc"
+    },
+    "pack-de": {
+      "file": "https://github.com/gosanefr/langswap/releases/download/packs-20261014-0517/pack-de.sqlite.xz",
+      "bytes": 33281684,
+      "sqliteBytes": 247615488,
+      "sha256": "360e91c210101dfb5428649210be337bf5399ac39adf9d89913e95e38453439a"
+    },
+    "pack-it": {
+      "file": "https://github.com/gosanefr/langswap/releases/download/packs-20261014-0517/pack-it.sqlite.xz",
+      "bytes": 17590312,
+      "sqliteBytes": 124395520,
+      "sha256": "d02fa2770e61c30073b805b8e9f54b3344a1599e60182696aee76dc4945c2d74"
+    },
+    "pack-pt": {
+      "file": "https://github.com/gosanefr/langswap/releases/download/packs-20261014-0517/pack-pt.sqlite.xz",
+      "bytes": 7475380,
+      "sqliteBytes": 37654528,
+      "sha256": "b6c20041a8773f6356aec8fe895af07fecbfd624b6b0176686093c02e61ac232"
+    }
+  },
+  "release": "packs-20261014-0517",
+  "licenseFile": "https://github.com/gosanefr/langswap/releases/download/packs-20261014-0517/LICENSE-DATA.md"
+}
