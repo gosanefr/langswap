@@ -2,8 +2,8 @@
 title: "Performance sur téléphone : premier accès à froid et mots riches"
 labels: [wayfinder:prototype]
 parent: map-android
-status: open
-assignee:
+status: closed
+assignee: cat
 blocked_by: []
 ---
 
@@ -22,3 +22,11 @@ Que faire des deux points lents mesurés sur le Mi 9 SE : le premier accès à f
 
 - Le premier accès à froid est-il gênant à l'usage ? Si oui : préchauffage ou indicateur.
 - Les ≈ 100 ms au p95 des mots riches sont-ils acceptables ?
+
+## Résolution (2026-10-14)
+
+Rien à construire : les deux points sont acceptés à l'usage, sur le Mi 9 SE.
+
+1. **Premier accès à froid** : jugé correct au lancement (≈ 0,5 s au plus en fr/en/es sur le premier mot riche, sans doute moins depuis la suppression des « bridges »). Pas de préchauffage, pas d'indicateur de chargement.
+2. **Mots riches** (p50 ≈ 57 ms, p95 ≈ 106 ms dans la WebView) : ressentis comme instantanés. Sur téléphone, l'objectif devient **≈ 100 ms au p95 sur mot riche**. Les < 50 ms au p95 de [Stack du prototype](009-stack-prototype.md) restent l'objectif du poste.
+3. Pistes non retenues, à rouvrir seulement si l'usage le demande (téléphone plus lent, plaintes) : préchauffage des index au lancement, affichage du tableau des sens avant le pivot. Le portage Kotlin reste écarté ([Coquille Android](015-coquille-android.md)).

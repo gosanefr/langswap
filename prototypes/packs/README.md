@@ -89,7 +89,7 @@ Lecture :
 - Le découpage en packs n'est pas plus lent que le monolithe, à langues égales (fr/en/es : 3 packs + bridges 76 ms au p95 contre 85 ms pour le monolithe).
 - Le téléphone est ≈ 2–3× plus lent que la machine de dev. Les 50 ms au p95 ne tiennent pas sur les mots les plus riches (58 ms avec mmap/cache) ; les mots ordinaires restent bien en dessous.
 - À garder pour l'appli : `PRAGMA <schéma>.mmap_size` et `cache_size` sur chaque pack attaché.
-- À traiter : le premier accès à froid (préchauffage des index au lancement, ou indicateur de chargement).
+- Premier accès à froid : jugé correct à l'usage, rien à construire ([018](../../wayfinder/tickets/018-performance-telephone.md)).
 
 ### `search.mjs` dans une WebView (même téléphone)
 
