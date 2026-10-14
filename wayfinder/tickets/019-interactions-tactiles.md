@@ -2,8 +2,8 @@
 title: "Interactions tactiles et écrans du téléphone"
 labels: [wayfinder:grilling]
 parent: map-android
-status: open
-assignee:
+status: closed
+assignee: cat
 blocked_by: []
 ---
 
@@ -26,3 +26,16 @@ L'interface vient du poste (clavier, souris, survol). Quels gestes et quels écr
 - Historique au doigt : relancer, supprimer (glisser ?).
 - Bouton retour : revenir à la page principale / au mot précédent ?
 - Paysage : bloquer en portrait ou réorganiser ?
+
+## Résolution (2026-10-14)
+
+Tout ce qui suit vaut **sur écran tactile seulement** (`matchMedia('(hover: none) and (pointer: coarse)')`, le test qui masque déjà les pastilles `Alt+…`). Le poste ne change pas : clic = copier, double-clic = chercher, `title` pour les chemins du pivot, raccourcis clavier.
+
+1. **Mot du résultat** : un tap ouvre une **bulle** avec « Copier » et « Chercher », plus une ligne « via en, es (N chemins) », en lecture seule, sur les mots issus du pivot seulement. La bulle s'ouvre au-dessus du mot, ou en dessous près du haut de l'écran ; elle se ferme sur un tap dehors, un défilement, ou un tap sur un autre mot (qui ouvre la sienne). « Copier » ferme la bulle, surligne le mot (`.copied`) et affiche le toast existant. Les deux boutons appellent `copy()` / `bounce()` : seul le déclencheur diffère du poste.
+2. **« Chercher » depuis la bulle** : le mot va dans le champ **sans clavier** (pas de focus) ; le résultat reste visible, on tape le champ pour le modifier.
+3. **Historique** : un appui long sur une entrée ouvre la même bulle avec « Supprimer » (une seule entrée ; l'effacement complet reste dans les réglages). Sélection de texte et menu natif bloqués sur les entrées. Le tap rouvre toujours l'entrée.
+4. **Bouton retour**, dans l'ordre : fermer la bulle ouverte ; (le clavier est fermé par Android avant l'appli) ; Historique ou Réglages → page principale ; page principale → appli en arrière-plan (comportement Android par défaut). **Pas** de retour aux recherches précédentes.
+5. **Paysage** : laissé tel quel (le clavier cache le résultat ; usage rare).
+6. **Focus automatique** de `goTo()` : aucun sur l'Historique (le clavier cacherait la liste) ; sur la page principale, seulement si le champ est vide (lancement, après « effacer »).
+7. **Hors périmètre** : partager les résultats vers une autre appli (la WebView n'a pas `navigator.share`, il faudrait un pont Kotlin `ACTION_SEND`). Amélioration possible plus tard, pas une adaptation au tactile. Un « Partager » dans la bulle du mot est écarté : il ferait doublon avec « Copier ».
+8. **À vérifier pendant la mise en œuvre**, sans décision à prendre : le thème sombre à l'écran du téléphone.

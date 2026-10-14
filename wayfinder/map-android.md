@@ -25,10 +25,11 @@ Une appli Android LangSwap utilisable au quotidien et distribuable : mêmes rés
 - [Téléchargement des packs](tickets/016-telechargement-packs.md) — `packs.json` + `.sqlite.gz` sur un serveur HTTP (`packs.url`) ; un seul build sur l'appareil ; vérification sha256, décompression puis bascule sous verrou, rechargement natif de la page ; premier lancement sur le panneau des packs.
 - [Hébergement public des packs et conformité CC BY-SA / GFDL](tickets/017-hebergement-licence.md) — canal F-Droid + Play ; dépôt public `gosanefr/langswap` (tout sauf les données), code GPL-3.0-or-later, packs CC BY-SA 4.0 ; releases `packs-<build>` + manifeste `packs/packs.json` versionné (URL absolues) ; URL réglable dans l'appli, HTTPS seulement en release ; xz au lieu de gzip ; écran « À propos » ; `langswap publish-packs` à la main.
 - [Performance sur téléphone : premier accès à froid et mots riches](tickets/018-performance-telephone.md) — rien à construire : accès à froid jugé correct, mots riches (p95 ≈ 106 ms) ressentis instantanés ; objectif téléphone relevé à ≈ 100 ms au p95 sur mot riche.
+- [Interactions tactiles et écrans du téléphone](tickets/019-interactions-tactiles.md) — sur tactile seulement : tap sur un mot = bulle « Copier · Chercher · via … », recherche sans clavier ; appui long sur une entrée d'historique = « Supprimer » ; retour = bulle, puis page principale, puis arrière-plan ; paysage inchangé ; pas de focus automatique qui ferait monter le clavier sur un résultat.
 
 ## Not yet specified
 
-<!-- tickets ouverts : 019 (interactions tactiles), 020 (publication) — ce sont des tickets, pas du brouillard -->
+<!-- ticket ouvert : 020 (publication) — c'est un ticket, pas du brouillard -->
 
 ## Out of scope
 
@@ -36,3 +37,4 @@ Une appli Android LangSwap utilisable au quotidien et distribuable : mêmes rés
 - Langues au-delà des 6.
 - API de traduction en ligne.
 - Synchronisation de l'historique entre appareils.
+- Partager les résultats vers une autre appli : fonction nouvelle, pas une adaptation au tactile ; amélioration possible plus tard ([Interactions tactiles](tickets/019-interactions-tactiles.md)).
