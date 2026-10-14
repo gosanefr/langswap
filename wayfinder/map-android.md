@@ -26,10 +26,11 @@ Une appli Android LangSwap utilisable au quotidien et distribuable : mêmes rés
 - [Hébergement public des packs et conformité CC BY-SA / GFDL](tickets/017-hebergement-licence.md) — canal F-Droid + Play ; dépôt public `gosanefr/langswap` (tout sauf les données), code GPL-3.0-or-later, packs CC BY-SA 4.0 ; releases `packs-<build>` + manifeste `packs/packs.json` versionné (URL absolues) ; URL réglable dans l'appli, HTTPS seulement en release ; xz au lieu de gzip ; écran « À propos » ; `langswap publish-packs` à la main.
 - [Performance sur téléphone : premier accès à froid et mots riches](tickets/018-performance-telephone.md) — rien à construire : accès à froid jugé correct, mots riches (p95 ≈ 106 ms) ressentis instantanés ; objectif téléphone relevé à ≈ 100 ms au p95 sur mot riche.
 - [Interactions tactiles et écrans du téléphone](tickets/019-interactions-tactiles.md) — sur tactile seulement : tap sur un mot = bulle « Copier · Chercher · via … », recherche sans clavier ; appui long sur une entrée d'historique = « Supprimer » ; retour = bulle, puis page principale, puis arrière-plan ; paysage inchangé ; pas de focus automatique qui ferait monter le clavier sur un résultat.
+- [Publication : build release, signature, canal de distribution](tickets/020-publication.md) — une seule clé (l'auteur) pour Play et F-Droid via build reproductible vérifié à chaque version ; compte Play personnel « gosanefr », test fermé par Google Group ; versions semver dès 1.0.0 ; `targetSdk 36` + marges Kotlin, vérifiés sur émulateur API 36 ; fiches fastlane en/fr/es ; `PRIVACY.md` ; `langswap release` ; pas de R8 ; la 1.0.0 inclut les interactions tactiles.
 
 ## Not yet specified
 
-<!-- ticket ouvert : 020 (publication) — c'est un ticket, pas du brouillard -->
+<!-- vide : plus aucun ticket ouvert, la route vers la destination est tracée (2026-10-14). Reste la mise en œuvre, hors carte. -->
 
 ## Out of scope
 
