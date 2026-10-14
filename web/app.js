@@ -33,6 +33,36 @@ if (!configured().includes(S.dst)) S.dst = 'en';
 let toastTimer;
 function toast(msg) { const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 1200); }
 
+// ---------- écran tactile (ticket 019) : une bulle d'actions remplace clic, double-clic et survol ----------
+// Même test que les pastilles Alt+… masquées en CSS ; le poste ne change pas.
+const touchQuery = matchMedia('(hover: none) and (pointer: coarse)');
+const isTouch = () => touchQuery.matches;
+const bubble = $('#bubble');
+let bubbleActions = null;
+function openBubble(anchor, actions, note = '') {
+  bubbleActions = actions;
+  bubble.innerHTML = `<div class="bubble-actions">${actions.map((a, i) => `<button role="menuitem" data-i="${i}" class="${a.danger ? 'danger' : ''}">${esc(a.label)}</button>`).join('')}</div>`
+    + (note ? `<div class="bubble-note">${esc(note)}</div>` : '');
+  bubble.hidden = false;
+  // Au-dessus de l'élément ; en dessous s'il est trop près du haut de l'écran.
+  const r = anchor.getBoundingClientRect(), b = bubble.getBoundingClientRect();
+  bubble.style.left = Math.max(8, Math.min(r.left + r.width / 2 - b.width / 2, innerWidth - b.width - 8)) + 'px';
+  bubble.style.top = (r.top - b.height - 8 >= 8 ? r.top - b.height - 8 : r.bottom + 8) + 'px';
+}
+function closeBubble() {
+  if (bubble.hidden) return false;
+  bubble.hidden = true; bubbleActions = null;
+  return true;
+}
+bubble.addEventListener('click', e => {
+  const b = e.target.closest('button[data-i]'); if (!b) return;
+  const a = bubbleActions[b.dataset.i];
+  closeBubble(); a.run();
+});
+// Fermée par un tap dehors (un tap sur un autre mot ouvre ensuite la sienne) ou par un défilement.
+document.addEventListener('pointerdown', e => { if (!bubble.contains(e.target)) closeBubble(); }, true);
+addEventListener('scroll', () => closeBubble(), true);
+
 // ---------- pastilles ----------
 function chips(sel, onClick, prefix, withAuto) {
   const p = (l, i, sec) => `<span class="chip ${sec ? 'sec' : ''} ${l === sel ? 'on' : ''}" data-l="${l}">${l.toUpperCase()}<span class="k">${prefix}${i + 1}</span></span>`;
@@ -144,7 +174,7 @@ const nearHtml = (list, lang, key) => {
   const open = opened.has(key);
   const shown = open ? list : list.slice(0, NEAR_CAP);
   const title = p => `${t('via')} ${p.via.join(', ')} (${p.paths})`;
-  return shown.map(p => `<span class="word" tabindex="0" data-lang="${lang}" data-text="${esc(p.text)}" title="${esc(title(p))}" aria-label="${esc(p.text + ', ' + title(p))}">${esc(p.text)}${p.paths > 1 ? `<sup class="paths">${p.paths}</sup>` : ''}</span>`).join('')
+  return shown.map(p => `<span class="word" tabindex="0" data-lang="${lang}" data-text="${esc(p.text)}" data-via="${esc(p.via.join(', '))}" data-paths="${p.paths}" title="${esc(title(p))}" aria-label="${esc(p.text + ', ' + title(p))}">${esc(p.text)}${p.paths > 1 ? `<sup class="paths">${p.paths}</sup>` : ''}</span>`).join('')
     + (!open && list.length > NEAR_CAP ? `<span class="more" data-toggle="${esc(key)}">+${list.length - NEAR_CAP}</span>` : '');
 };
 const opened = new Set();       // colonnes « Proches » dépliées, groupes aux sens cachés dépliés
@@ -166,6 +196,7 @@ function groupHead(g, showLang) {
 
 function renderResult() {
   const div = $('#result');
+  closeBubble();
   div.classList.remove('stale');
   if (!R) { div.innerHTML = field.value.trim() ? '' : `<div class="empty">${CFG.packs && !configured().length ? t('packs.none') : t('typeWord', S.src ? NAMES[S.src] : null)}</div>`; return; }
   const showLang = S.src == null || R.fallback;
@@ -237,14 +268,14 @@ function renderOne(showLang) {
   return nothing ? `<div class="empty">${t('noEquivalent', NAMES[d])}</div>` : h;
 }
 
-// ---------- interaction sur les mots : clic = copier, double-clic = nouvelle recherche ----------
+// ---------- interaction sur les mots : clic = copier, double-clic = nouvelle recherche ; tactile : tap = bulle ----------
 $('#result').addEventListener('click', e => {
   const o = e.target.closest('[data-toggle]');
   if (o) { const k = o.dataset.toggle; opened.has(k) ? opened.delete(k) : opened.add(k); renderResult(); return; }
   const w = e.target.closest('.word');
-  if (w) copy(w);
+  if (w) isTouch() ? wordBubble(w) : copy(w);
 });
-$('#result').addEventListener('dblclick', e => { const w = e.target.closest('.word'); if (w) { window.getSelection()?.removeAllRanges(); bounce(w); } });
+$('#result').addEventListener('dblclick', e => { if (isTouch()) return; const w = e.target.closest('.word'); if (w) { window.getSelection()?.removeAllRanges(); bounce(w); } });
 $('#result').addEventListener('keydown', e => {
   const w = e.target.closest('.word');
   if (!w) return;
@@ -258,6 +289,12 @@ $('#result').addEventListener('keydown', e => {
     if (j < 0) field.focus(); else all[Math.min(j, all.length - 1)]?.focus();
   }
 });
+
+// Bulle du mot : mêmes actions que le poste ; « via … » en lecture seule, sur les mots du pivot seulement.
+function wordBubble(w) {
+  const note = w.dataset.via ? t('bubble.via', w.dataset.via, Number(w.dataset.paths)) : '';
+  openBubble(w, [{ label: t('bubble.copy'), run: () => copy(w) }, { label: t('bubble.search'), run: () => bounce(w) }], note);
+}
 
 async function copy(w) {
   const text = w.dataset.text;
@@ -277,7 +314,7 @@ async function bounce(w) {
   if (S.dst === lang) S.dst = LANGS.find(l => l !== lang);
   S.src = lang; save(); renderBars();
   field.value = w.dataset.text;
-  field.focus();
+  if (isTouch()) field.blur(); else field.focus();   // tactile : pas de clavier, le résultat reste visible
   clearTimeout(timer);
   lastTimed = null;
   lookUp(field.value, { parentId: parent ?? null });
@@ -382,8 +419,23 @@ function renderHistory() {
   if (focusId) historyList.querySelector(`.entry[data-id="${focusId}"]`)?.focus();
 }
 const entryOf = el => H.rows.find(l => String(l.id) === el.dataset.id);
+// Tactile : appui long sur une entrée = bulle « Supprimer » (sélection de texte et menu natif bloqués en CSS).
+let pressTimer = null, pressStart = null, longPressed = false;
+historyList.addEventListener('pointerdown', e => {
+  const el = e.target.closest('.entry'); if (!el || !isTouch()) return;
+  longPressed = false; pressStart = { x: e.clientX, y: e.clientY };
+  clearTimeout(pressTimer);
+  pressTimer = setTimeout(() => {
+    longPressed = true;
+    openBubble(el, [{ label: t('bubble.delete'), danger: true, run: () => deleteEntry(el) }]);
+  }, 500);
+});
+historyList.addEventListener('pointermove', e => { if (pressStart && Math.hypot(e.clientX - pressStart.x, e.clientY - pressStart.y) > 10) clearTimeout(pressTimer); });
+for (const type of ['pointerup', 'pointercancel']) historyList.addEventListener(type, () => { clearTimeout(pressTimer); pressStart = null; });
+historyList.addEventListener('contextmenu', e => { if (isTouch() && e.target.closest('.entry')) e.preventDefault(); });
 historyList.addEventListener('click', e => {
   const el = e.target.closest('.entry'); if (!el) return;
+  if (longPressed) { longPressed = false; return; }   // fin d'un appui long : la bulle est ouverte, l'entrée ne s'ouvre pas
   if (e.target.closest('.delete')) deleteEntry(el); else reopen(entryOf(el));
 });
 historyList.addEventListener('keydown', e => {
@@ -551,13 +603,24 @@ $('#packs-url').addEventListener('keydown', e => { if (e.key === 'Enter') setSer
 // ---------- navigation ----------
 function goTo(page) {
   S.page = page;
+  closeBubble();
+  if (isTouch() && page !== 'main') document.activeElement?.blur();   // le clavier ne suit pas sur l'autre page
   for (const p of ['main', 'history', 'config']) $('#page-' + p).hidden = p !== page;
   // Seulement les boutons de page : les boutons FR/EN/ES de la même barre gardent leur surlignage.
   document.querySelectorAll('.nav button[data-page]').forEach(b => { b.classList.toggle('on', b.dataset.page === page); b.setAttribute('aria-current', b.dataset.page === page ? 'page' : 'false'); });
-  if (page === 'history') { loadHistory(true); $('#filter').focus(); }
+  // Tactile : pas de focus qui ferait monter le clavier sur l'historique ou sur un résultat ; seulement si le champ est vide.
+  if (page === 'history') { loadHistory(true); if (!isTouch()) $('#filter').focus(); }
   if (page === 'config') { renderConfig(); renderMeta(); renderAbout(); $('#server-status').textContent = ''; if (CFG.packs) loadPacks(); }
-  if (page === 'main') { if (!R && field.value.trim()) rerun(); field.focus(); }
+  if (page === 'main') { if (!R && field.value.trim()) rerun(); if (!isTouch() || !field.value.trim()) field.focus(); }
 }
+
+// Bouton retour d'Android (MainActivity) : bulle ouverte, puis Historique ou Config → page principale.
+// false : rien à faire dans la page, l'appli passe en arrière-plan. Jamais de retour aux recherches précédentes.
+window.langswapBack = () => {
+  if (closeBubble()) return true;
+  if (S.page !== 'main') { goTo('main'); return true; }
+  return false;
+};
 document.querySelector('.nav').addEventListener('click', e => { const b = e.target.closest('button[data-page]'); if (b) goTo(b.dataset.page); });
 
 // Langue de l'interface : 3 boutons dans la barre du bas.

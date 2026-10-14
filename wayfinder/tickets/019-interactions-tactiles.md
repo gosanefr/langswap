@@ -39,3 +39,11 @@ Tout ce qui suit vaut **sur écran tactile seulement** (`matchMedia('(hover: non
 6. **Focus automatique** de `goTo()` : aucun sur l'Historique (le clavier cacherait la liste) ; sur la page principale, seulement si le champ est vide (lancement, après « effacer »).
 7. **Hors périmètre** : partager les résultats vers une autre appli (la WebView n'a pas `navigator.share`, il faudrait un pont Kotlin `ACTION_SEND`). Amélioration possible plus tard, pas une adaptation au tactile. Un « Partager » dans la bulle du mot est écarté : il ferait doublon avec « Copier ».
 8. **À vérifier pendant la mise en œuvre**, sans décision à prendre : le thème sombre à l'écran du téléphone.
+
+## Mise en œuvre (2026-10-14)
+
+- `web/app.js` : `isTouch()` (même requête média que le CSS) ; bulle `#bubble` (`openBubble`/`closeBubble`) pour les mots du résultat (Copier, Chercher, ligne « via … ») et pour l'appui long (500 ms) sur une entrée de l'historique (Supprimer) ; « Chercher » sans focus ; focus de `goTo()` limité comme décidé ; `window.langswapBack()` pour le bouton retour.
+- La ligne « via … » reprend le contenu de l'infobulle du poste : les mots intermédiaires (`fr:bavarder, es:charlar…`) et le nombre de chemins, pas seulement les langues.
+- `MainActivity.kt` : retour par `OnBackInvokedCallback` (Android 13+, `enableOnBackInvokedCallback`) ou `onBackPressed` ; la page décide, sinon `moveTaskToBack` (l'appli garde sa recherche).
+- CSS tactile : entrées non sélectionnables, sans menu natif ni « × » (suppression par appui long seulement).
+- Vérifié sur le Mi 9 SE : bulle au-dessus du mot, Copier (toast), Chercher (pas de clavier), via sur un mot du pivot, appui long, les trois étapes du retour, reprise de l'appli, thème sombre (bascule en direct, bulle lisible).

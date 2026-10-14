@@ -143,6 +143,13 @@ tr.near .paths { font-size: 10px; vertical-align: super; color: var(--sec); }
 .packs-status { margin: 8px 0; font-size: 13px; }
 .packs-status progress { width: 100%; height: 8px; display: block; margin-top: 4px; accent-color: var(--acc); }
 .packs-actions { margin-top: 8px; }
+/* Bulle d'actions sur écran tactile (ticket 019) : mot du résultat, entrée de l'historique */
+.bubble { position: fixed; z-index: 20; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 4px 16px rgba(0, 0, 0, .18); padding: 4px; max-width: calc(100vw - 16px); }
+.bubble-actions { display: flex; }
+.bubble-actions button { border: none; background: none; padding: 10px 16px; font-size: 15px; font-weight: 600; color: var(--acc); border-radius: 6px; cursor: pointer; }
+.bubble-actions button + button { border-left: 1px solid var(--line); border-radius: 0; }
+.bubble-actions button.danger { color: var(--danger); }
+.bubble-note { font-size: 12px; color: var(--mute); padding: 4px 16px 6px; border-top: 1px solid var(--line); }
 .toast { position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 6px 14px; border-radius: 999px; font-size: 13px; z-index: 10; }
 
 @media (max-width: 640px) {
@@ -155,4 +162,7 @@ tr.near .paths { font-size: 10px; vertical-align: super; color: var(--sec); }
 /* Écran tactile sans survol (téléphone) : pas de clavier, donc ni pastilles Alt+…, ni aide des raccourcis. */
 @media (hover: none) and (pointer: coarse) {
   .k, .keys { display: none; }
+  .entry { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }   /* appui long = bulle, pas de sélection */
+  .entry .delete { display: none; }   /* suppression par appui long seulement : pas de × au focus après un appui */
+  .word { -webkit-tap-highlight-color: transparent; }
 }
