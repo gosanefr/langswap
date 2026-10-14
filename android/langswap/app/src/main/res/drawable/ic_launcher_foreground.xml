@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icône LangSwap : bulle de dialogue avec deux flèches opposées (même dessin que web/icon.svg),
+     agrandie de 15 % autour du centre, dans la zone sûre des icônes adaptatives (21..87 sur 108). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <group android:scaleX="1.15" android:scaleY="1.15" android:pivotX="54" android:pivotY="55.5">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M40 30 H68 A12 12 0 0 1 80 42 V58 A12 12 0 0 1 68 70 H52 L37 81 L40 70 A12 12 0 0 1 28 58 V42 A12 12 0 0 1 40 30 Z" />
+        <path android:strokeColor="#2F6FDB" android:strokeWidth="5" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M41 44 H67 M61 38 L67 44 L61 50 M67 56 H41 M47 50 L41 56 L47 62" />
+    </group>
+</vector>

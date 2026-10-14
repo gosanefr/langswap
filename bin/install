@@ -1,0 +1,17 @@
+#!/bin/sh
+# Installe la commande `langswap` (~/.local/bin) et l'entrée de menu (.desktop). Réversible : supprimer les deux fichiers.
+set -e
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+mkdir -p "$HOME/.local/bin" "$HOME/.local/share/applications"
+ln -sf "$ROOT/bin/langswap" "$HOME/.local/bin/langswap"
+cat > "$HOME/.local/share/applications/langswap.desktop" <<DESK
+[Desktop Entry]
+Type=Application
+Name=LangSwap
+Comment=Traduction mot à mot fr/en/es/de/it/pt, hors ligne
+Exec=$ROOT/bin/langswap
+Icon=$ROOT/web/icon.svg
+Terminal=false
+Categories=Office;Dictionary;
+DESK
+echo "Installed: ~/.local/bin/langswap and ~/.local/share/applications/langswap.desktop"

@@ -1,0 +1,15 @@
+# Données générées (jamais dans le dépôt) : dumps kaikki, cache d'extraction, base, historique, packs.
+# Les packs sont publiés dans les releases GitHub `packs-<build>` (`langswap publish-packs`).
+/dumps/
+/cache/
+/data/
+
+# Builds Android
+.gradle/
+.kotlin/
+build/
+local.properties
+*.apk
+*.aab
+*.jks
+*.keystore

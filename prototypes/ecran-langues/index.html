@@ -1,0 +1,252 @@
+<!doctype html>
+<!--
+  PROTOTYPE JETABLE — ticket « Écran principal : changer de langue source/destination en un geste »
+  Question : comment changer source/destination (et inverser) en un seul geste ?
+  4 variantes sur une seule page, ?variant=A|B|C|D, barre flottante ← →.
+  Données : mini-dictionnaire factice en mémoire. Rien n'est persistant.
+  Lancer : python3 -m http.server -d ~/dev/langswap/prototypes/ecran-langues 8765  → http://localhost:8765
+-->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LangSwap prototype</title>
+<style>
+  :root { --bg:#f6f5f2; --panel:#fff; --ink:#1d1d1f; --mute:#8a8a90; --line:#e2e0db; --acc:#2f6fdb; --acc2:#e8f0fd; --sec:#b9b7b0; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.4 system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  .app { max-width:760px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding:16px 16px 120px; gap:12px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  input.word { width:100%; font-size:22px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; outline:none; }
+  input.word:focus { border-color:var(--acc); }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .chip { border:1px solid var(--line); background:#fff; border-radius:999px; padding:5px 12px; cursor:pointer; font-weight:600; font-size:14px; user-select:none; }
+  .chip.sec { color:var(--mute); font-weight:500; font-size:13px; }
+  .chip.on { background:var(--acc); border-color:var(--acc); color:#fff; }
+  .chip.off { opacity:.3; cursor:not-allowed; }
+  .chip .k { font-size:10px; opacity:.6; margin-left:4px; font-weight:400; }
+  .sep { width:1px; height:20px; background:var(--line); margin:0 4px; }
+  .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--mute); margin-bottom:6px; }
+  .swap { border:1px solid var(--line); background:#fff; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:18px; }
+  .sense { padding:8px 0; border-top:1px solid var(--line); }
+  .sense:first-child { border-top:none; }
+  .gloss { font-size:12px; color:var(--mute); }
+  .words { font-size:19px; font-weight:600; }
+  .words span + span::before { content:" · "; color:var(--sec); font-weight:400; }
+  .empty { color:var(--mute); font-style:italic; }
+  .hint { font-size:12px; color:var(--mute); }
+  .nav { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--line); display:flex; justify-content:center; gap:40px; padding:10px; font-size:13px; color:var(--mute); }
+  .nav b { color:var(--acc); }
+  .debug { font:12px ui-monospace, monospace; color:var(--mute); background:#efede8; border-radius:8px; padding:6px 10px; }
+  /* B */
+  .pair { display:flex; align-items:center; justify-content:center; gap:16px; font-size:34px; font-weight:700; }
+  .pair .side { cursor:pointer; padding:4px 14px; border-radius:10px; border:1px dashed transparent; }
+  .pair .side:hover { border-color:var(--line); background:var(--acc2); }
+  .pair .side small { display:block; font-size:11px; font-weight:400; color:var(--mute); text-align:center; }
+  /* C */
+  table.grid { width:100%; border-collapse:collapse; table-layout:fixed; }
+  table.grid th:first-child { width:28%; } table.grid th { text-align:left; font-size:12px; color:var(--mute); font-weight:600; padding:6px; border-bottom:1px solid var(--line); }
+  table.grid td { padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:top; font-weight:600; }
+  table.grid td.g { font-weight:400; font-size:12px; color:var(--mute); width:28%; }
+  /* D */
+  .detect { font-size:12px; color:var(--acc); font-weight:600; margin:10px 0 2px; }
+  /* switcher */
+  .proto { position:fixed; bottom:56px; left:50%; transform:translateX(-50%); background:#111; color:#fff; border-radius:999px; padding:6px 8px; display:flex; gap:8px; align-items:center; box-shadow:0 4px 18px rgba(0,0,0,.3); font-size:13px; z-index:10; }
+  .proto button { background:#333; color:#fff; border:none; border-radius:999px; width:28px; height:28px; cursor:pointer; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// ---------- données factices : un « concept » = un sens ----------
+const LANGS = { fr:'Français', en:'English', es:'Español', de:'Deutsch', it:'Italiano', pt:'Português' };
+const PRIMARY = ['fr','en','es'], SECONDARY = ['de','it','pt'], ALL = [...PRIMARY, ...SECONDARY];
+const DICT = [
+  { g:'activité, effort', w:{fr:['travail'],en:['work','labour'],es:['trabajo'],de:['Arbeit'],it:['lavoro'],pt:['trabalho']} },
+  { g:'création (art)', w:{fr:['œuvre'],en:['work'],es:['obra'],de:['Werk'],it:['opera'],pt:['obra']} },
+  { g:'fonctionner (machine)', w:{fr:['fonctionner','marcher'],en:['work'],es:['funcionar'],de:['funktionieren'],it:['funzionare'],pt:['funcionar']} },
+  { g:'poste rémunéré', w:{fr:['emploi','poste','boulot'],en:['job'],es:['empleo','puesto'],de:['Stelle','Job'],it:['impiego','lavoro'],pt:['emprego']} },
+  { g:'profession', w:{fr:['métier'],en:['trade','occupation','job'],es:['oficio'],de:['Beruf'],it:['mestiere'],pt:['ofício']} },
+  { g:'tâche ponctuelle', w:{fr:['tâche','boulot'],en:['task','job'],es:['tarea'],de:['Aufgabe'],it:['compito'],pt:['tarefa']} },
+  { g:'bâtiment', w:{fr:['maison'],en:['house'],es:['casa'],de:['Haus'],it:['casa'],pt:['casa']} },
+  { g:'chez soi', w:{fr:['maison','foyer','chez-soi'],en:['home'],es:['hogar','casa'],de:['Zuhause','Heim'],it:['casa'],pt:['lar','casa']} },
+  { g:'attendant un enfant', w:{fr:['enceinte'],en:['pregnant'],es:['embarazada'],de:['schwanger'],it:['incinta'],pt:['grávida']} },
+  { g:'mal à l’aise', w:{fr:['gêné','embarrassé'],en:['embarrassed'],es:['avergonzado'],de:['verlegen'],it:['imbarazzato'],pt:['envergonhado']} },
+  { g:'muraille', w:{fr:['enceinte','muraille'],en:['enclosure','wall'],es:['recinto','muralla'],de:['Ringmauer'],it:['cinta'],pt:['muralha']} },
+  { g:'haut-parleur', w:{fr:['enceinte'],en:['speaker'],es:['altavoz'],de:['Lautsprecher'],it:['cassa'],pt:['caixa de som']} },
+];
+const norm = s => s.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase().trim();
+const lookup = (word, src) => !word ? [] : DICT.filter(c => (c.w[src]||[]).some(x => norm(x) === norm(word)));
+
+// ---------- état ----------
+const S = { src:'fr', dst:'en', word:'travail', gestures:0, last:'—' };
+S.auto = false; S.all = true;
+const variants = { A:'Rangées de pastilles', B:'Paire compacte cliquable', C:'Toutes les destinations', D:'Source auto-détectée', E:'Pastilles + AUTO + mode toutes' };
+const keys = Object.keys(variants);
+let variant = new URLSearchParams(location.search).get('variant') || 'A';
+if (!variants[variant]) variant = 'A';
+
+function act(label, fn) { fn(); S.gestures++; S.last = label; render(true); }
+const setSrc = l => act('source='+l, () => { if (l === S.dst) S.dst = S.src; S.src = l; });
+const setDst = l => act('dest='+l, () => { if (l === S.src) S.src = S.dst; S.dst = l; });
+const swap = () => act('inverser', () => { S.auto = false; [S.src,S.dst] = [S.dst,S.src]; });
+const setSrcE = l => act('source='+l, () => { S.auto = false; if (l === S.dst) S.dst = S.src; S.src = l; });
+const toggleAuto = () => act('auto', () => { S.auto = !S.auto; });
+const toggleAll = () => act('mode '+(S.all?'1 langue':'toutes'), () => { S.all = !S.all; });
+const cycle = (side) => act('cycle '+side, () => {
+  const cur = S[side], other = side === 'src' ? S.dst : S.src;
+  let i = ALL.indexOf(cur); do { i = (i+1) % ALL.length; } while (ALL[i] === other);
+  S[side] = ALL[i];
+});
+
+// ---------- briques ----------
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const chipRow = (sel, onClick, keyPrefix, exclude) => `<div class="chips">` +
+  PRIMARY.map((l,i) => `<span class="chip ${l===sel?'on':''}" onclick="${onClick}('${l}')">${l.toUpperCase()}<span class="k">${keyPrefix}${i+1}</span></span>`).join('') +
+  `<span class="sep"></span>` +
+  SECONDARY.map((l,i) => `<span class="chip sec ${l===sel?'on':''}" onclick="${onClick}('${l}')">${l.toUpperCase()}<span class="k">${keyPrefix}${i+4}</span></span>`).join('') + `</div>`;
+const input = () => `<input class="word" id="w" value="${esc(S.word)}" placeholder="Un mot…" autocomplete="off" spellcheck="false" oninput="S.word=this.value; render()">`;
+const senses = (src, dst) => {
+  const r = lookup(S.word, src);
+  if (!S.word) return `<div class="empty">Tapez un mot.</div>`;
+  if (!r.length) return `<div class="empty">Aucun équivalent pour « ${esc(S.word)} » (${src.toUpperCase()}).</div>`;
+  return r.map(c => `<div class="sense"><div class="gloss">${c.g}</div><div class="words">${(c.w[dst]||['—']).map(x=>`<span>${x}</span>`).join('')}</div></div>`).join('');
+};
+// E : groupes [langue source, sens] — source fixée, repli auto si rien, ou AUTO
+function resolveE() {
+  if (!S.word) return { groups:[], fallback:false };
+  const detect = except => ALL.filter(l => l !== except).map(l => [l, lookup(S.word, l)]).filter(([,r]) => r.length);
+  if (S.auto) return { groups: detect(S.all ? null : S.dst), fallback:false };
+  const r = lookup(S.word, S.src);
+  if (r.length) return { groups:[[S.src, r]], fallback:false };
+  return { groups: detect(S.src).filter(([l]) => S.all || l !== S.dst), fallback:true };
+}
+function bodyE() {
+  if (!S.word) return `<div class="empty">Tapez un mot${S.auto ? ', dans n\'importe quelle langue' : ''}.</div>`;
+  const { groups, fallback } = resolveE();
+  if (!groups.length) return `<div class="empty">Mot inconnu dans les langues configurées.</div>`;
+  const showHead = S.auto || fallback;
+  const head = l => showHead ? `<div class="detect">depuis ${LANGS[l]}</div>` : '';
+  const warn = fallback ? `<div class="hint">Rien en ${LANGS[S.src]} — trouvé ailleurs :</div>` : '';
+  if (!S.all) return warn + groups.map(([l,r]) => head(l) + r.map(c => `<div class="sense"><div class="gloss">${c.g}</div><div class="words">${(c.w[S.dst]||['—']).map(x=>`<span>${x}</span>`).join('')}</div></div>`).join('')).join('');
+  // un seul tableau, mêmes colonnes pour tous les groupes ; la colonne de la langue d'origine montre le mot en grisé
+  const shown = showSec ? ALL : PRIMARY;
+  const cols = groups.length === 1 && !showHead ? shown.filter(x => x !== groups[0][0]) : shown;
+  const w = (72 / cols.length).toFixed(2) + '%';
+  return warn + `<table class="grid"><colgroup><col style="width:28%">${cols.map(() => `<col style="width:${w}">`).join('')}</colgroup>` +
+    `<tr><th>sens</th>${cols.map(x=>`<th>${x.toUpperCase()}</th>`).join('')}</tr>` +
+    groups.map(([l,r]) => (showHead ? `<tr><td colspan="${cols.length+1}" style="border:none;padding:10px 0 0">${head(l)}</td></tr>` : '') +
+      r.map(c => `<tr><td class="g">${c.g}</td>${cols.map(x => x === l
+        ? `<td style="color:var(--sec);font-weight:400">${(c.w[x]||['—']).join(', ')}</td>`
+        : `<td>${(c.w[x]||['—']).join(', ')}</td>`).join('')}</tr>`).join('')).join('') + `</table>`;
+}
+const nav = `<div class="nav"><b>Main</b><span>Historique</span><span>Config</span></div>`;
+const debug = () => `<div class="debug">src=${S.auto?"AUTO":S.src} dst=${S.all?"toutes":S.dst} mot="${esc(S.word)}" · gestes de langue=${S.gestures} · dernier=${S.last}</div>`;
+
+// ---------- variantes ----------
+const V = {
+  // A : deux rangées de pastilles, toujours visibles ; Alt+1..6 = source, Alt+Maj+1..6 = destination, Alt+S = inverser
+  A: () => `
+    <div class="panel">
+      <div class="lbl">Source</div>${chipRow(S.src,'setSrc','Alt+')}
+      <div style="height:10px"></div>${input()}
+    </div>
+    <div style="display:flex;justify-content:center"><button class="swap" onclick="swap()" title="Alt+S">⇅</button></div>
+    <div class="panel">
+      <div class="lbl">Destination</div>${chipRow(S.dst,'setDst','Alt+Maj+')}
+      <div style="height:6px"></div>${senses(S.src,S.dst)}
+    </div>
+    <div class="hint">Alt+1…6 source · Alt+Maj+1…6 destination · Alt+S inverser</div>`,
+  // B : la paire en gros ; un clic sur un côté = langue suivante ; Alt+Q / Alt+W = cycler, Alt+S = inverser
+  B: () => `
+    <div class="panel">
+      <div class="pair">
+        <span class="side" onclick="cycle('src')">${S.src.toUpperCase()}<small>${LANGS[S.src]}</small></span>
+        <button class="swap" onclick="swap()" title="Alt+S">⇄</button>
+        <span class="side" onclick="cycle('dst')">${S.dst.toUpperCase()}<small>${LANGS[S.dst]}</small></span>
+      </div>
+      <div style="height:12px"></div>${input()}
+    </div>
+    <div class="panel">${senses(S.src,S.dst)}</div>
+    <div class="hint">Clic sur un côté = langue suivante · Alt+Q source suivante · Alt+W destination suivante · Alt+S inverser</div>`,
+  // C : pas de destination à choisir — on affiche toutes les autres langues d'un coup
+  C: () => {
+    const r = lookup(S.word, S.src);
+    const cols = (showSec ? ALL : PRIMARY).filter(l => l !== S.src);
+    const body = !S.word ? `<div class="empty">Tapez un mot.</div>` : !r.length ? `<div class="empty">Aucun équivalent.</div>` :
+      `<table class="grid"><tr><th>sens</th>${cols.map(l=>`<th>${l.toUpperCase()}</th>`).join('')}</tr>` +
+      r.map(c => `<tr><td class="g">${c.g}</td>${cols.map(l=>`<td>${(c.w[l]||['—']).join(', ')}</td>`).join('')}</tr>`).join('') + `</table>`;
+    return `
+    <div class="panel"><div class="lbl">Je cherche un mot en…</div>${chipRow(S.src,'setSrc','Alt+')}<div style="height:10px"></div>${input()}</div>
+    <div class="panel">${body}
+      <div style="margin-top:8px"><label class="hint"><input type="checkbox" ${showSec?'checked':''} onchange="showSec=this.checked;render()"> afficher aussi DE/IT/PT</label></div>
+    </div>
+    <div class="hint">Une seule langue à choisir : celle du mot tapé. Toutes les autres sont affichées.</div>`;
+  },
+  // D : on ne choisit que la destination ; la source est devinée en cherchant le mot dans toutes les autres langues
+  D: () => {
+    const hits = S.word ? ALL.filter(l => l !== S.dst).map(l => [l, lookup(S.word, l)]).filter(([,r]) => r.length) : [];
+    const body = !S.word ? `<div class="empty">Tapez un mot, dans n'importe quelle langue.</div>` : !hits.length ? `<div class="empty">Mot inconnu dans les langues configurées.</div>` :
+      hits.map(([l,r]) => `<div class="detect">depuis ${LANGS[l]}</div>` + r.map(c => `<div class="sense"><div class="gloss">${c.g}</div><div class="words">${(c.w[S.dst]||['—']).map(x=>`<span>${x}</span>`).join('')}</div></div>`).join('')).join('');
+    return `
+    <div class="panel">${input()}</div>
+    <div class="panel"><div class="lbl">Vers</div>${chipRow(S.dst,'setDst','Alt+')}<div style="height:6px"></div>${body}</div>
+    <div class="hint">Alt+1…6 destination · essayez « casa », « work », « enceinte »</div>`;
+  },
+  // E : A + pastille AUTO (Alt+0) + repli auto si la source ne donne rien + bascule 1 langue / toutes (Alt+M)
+  E: () => `
+    <div class="panel">
+      <div class="lbl">Source</div>
+      <div class="chips"><span class="chip ${S.auto?'on':''}" onclick="toggleAuto()">AUTO<span class="k">Alt+0</span></span><span class="sep"></span>${chipRow(S.auto?null:S.src,'setSrcE','Alt+').slice(19,-6)}</div>
+      <div style="height:10px"></div>${input()}
+    </div>
+    <div style="display:flex;justify-content:center;gap:8px">
+      <button class="swap" onclick="swap()" title="Alt+S" ${S.auto?'disabled style="opacity:.3"':''}>⇅</button>
+      <button class="swap" onclick="toggleAll()" title="Alt+M" style="font-size:13px">${S.all ? '▤ toutes → 1 langue' : '▭ 1 langue → toutes'}</button>
+    </div>
+    <div class="panel">
+      ${S.all
+        ? `<div class="lbl">Toutes les langues</div><label class="hint"><input type="checkbox" ${showSec?'checked':''} onchange="showSec=this.checked;render()"> afficher aussi DE/IT/PT</label>`
+        : `<div class="lbl">Destination</div>${chipRow(S.dst,'setDst','Alt+Maj+')}`}
+      <div style="height:6px"></div>${bodyE()}
+    </div>
+    <div class="hint">Alt+0 AUTO · Alt+1…6 source · Alt+Maj+1…6 destination · Alt+S inverser · Alt+M 1 langue / toutes · essayez « casa », « embarazada » avec source FR</div>`,
+};
+let showSec = false;
+
+// ---------- rendu ----------
+function render(keepFocus) {
+  const had = document.activeElement && document.activeElement.id === 'w';
+  const pos = had ? document.activeElement.selectionStart : null;
+  document.getElementById('root').innerHTML = `<div class="app">${V[variant]()}${debug()}</div>${nav}` +
+    `<div class="proto"><button onclick="go(-1)">←</button><span>${variant} — ${variants[variant]}</span><button onclick="go(1)">→</button></div>`;
+  const w = document.getElementById('w');
+  if (w && (had || keepFocus)) { w.focus(); const p = pos ?? w.value.length; w.setSelectionRange(p,p); }
+}
+function go(d) {
+  variant = keys[(keys.indexOf(variant) + d + keys.length) % keys.length];
+  history.replaceState(null, '', '?variant=' + variant);
+  render(true);
+}
+document.addEventListener('keydown', e => {
+  const typing = e.target.matches && e.target.matches('input,textarea,[contenteditable]');
+  if (!e.altKey && !typing && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { go(e.key === 'ArrowLeft' ? -1 : 1); return; }
+  if (!e.altKey) return;
+  if (variant === 'E') {
+    const m = /^Digit([0-6])$/.exec(e.code);
+    if (m) { e.preventDefault(); if (m[1] === '0') toggleAuto(); else (e.shiftKey ? setDst : setSrcE)(ALL[m[1]-1]); return; }
+    if (e.code === 'KeyS' && !S.auto) { e.preventDefault(); swap(); }
+    if (e.code === 'KeyM') { e.preventDefault(); toggleAll(); }
+    return;
+  }
+  const n = /^Digit([1-6])$/.exec(e.code);
+  if (n) { e.preventDefault(); const l = ALL[n[1]-1];
+    if (variant === 'D') setDst(l); else if (e.shiftKey && variant === 'A') setDst(l); else if (variant !== 'B') setSrc(l); return; }
+  if (e.code === 'KeyS' && (variant === 'A' || variant === 'B')) { e.preventDefault(); swap(); }
+  if (e.code === 'KeyQ' && variant === 'B') { e.preventDefault(); cycle('src'); }
+  if (e.code === 'KeyW' && variant === 'B') { e.preventDefault(); cycle('dst'); }
+});
+render(true);
+</script>
+</body>
+</html>

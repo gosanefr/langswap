@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LangSwap</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<main class="app">
+  <!-- Main -->
+  <section id="page-main" class="page">
+    <div class="panel">
+      <div class="lbl" data-i18n="source"></div>
+      <div class="chips" id="sources"></div>
+      <div class="input-wrap">
+        <input id="input" class="input-box" data-i18n-ph="placeholder" autocomplete="off" spellcheck="false" autofocus>
+        <button id="clear-input" class="clear-input" type="button" data-i18n-title="title.clear" data-i18n-label="title.clear" hidden>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button id="swap" class="btn" data-i18n-title="title.swap">⇅</button>
+      <button id="mode" class="btn" data-i18n-title="title.mode"></button>
+    </div>
+    <div class="panel result-panel">
+      <div class="result-head">
+        <div id="targets"></div>
+        <label id="secondary-toggle" class="check"><input type="checkbox" id="show-secondary"> <span data-i18n="alsoShow"></span> <span id="secondary-names"></span></label>
+      </div>
+      <div id="result"></div>
+    </div>
+    <div class="help keys" data-i18n="helpMain"></div>
+  </section>
+
+  <!-- Historique -->
+  <section id="page-history" class="page" hidden>
+    <div class="panel">
+      <input id="filter" class="input-box small" data-i18n-ph="filter" autocomplete="off" spellcheck="false">
+    </div>
+    <div id="history-list" class="history" tabindex="-1"></div>
+    <div id="history-end" class="help"></div>
+    <div class="help keys" data-i18n="helpHistory"></div>
+  </section>
+
+  <!-- Config -->
+  <section id="page-config" class="page" hidden>
+    <!-- Appli Android seulement (/api/config → packs) : langues téléchargées. -->
+    <div class="panel" id="panel-packs" hidden>
+      <h2 data-i18n="cfg.packs"></h2>
+      <p class="help" data-i18n="packs.help"></p>
+      <div id="cfg-packs"></div>
+    </div>
+    <div class="panel">
+      <h2 data-i18n="cfg.langs"></h2>
+      <p class="help" data-i18n="cfg.langsHelp"></p>
+      <div id="cfg-langs" class="chips"></div>
+    </div>
+    <div class="panel">
+      <h2 data-i18n="cfg.pivot"></h2>
+      <div id="cfg-pivot" class="choices"></div>
+    </div>
+    <div class="panel">
+      <h2 data-i18n="cfg.history"></h2>
+      <div id="cfg-clear"></div>
+    </div>
+    <div class="panel">
+      <h2 data-i18n="cfg.data"></h2>
+      <div id="cfg-meta" class="meta"></div>
+    </div>
+    <!-- Appli Android seulement : serveur des packs (ticket 017 : réglable, pour ne pas dépendre d'un seul hébergeur). -->
+    <div class="panel" id="panel-advanced" hidden>
+      <h2 data-i18n="cfg.advanced"></h2>
+      <p class="help" data-i18n="server.help"></p>
+      <input id="packs-url" class="input-box small" type="url" autocomplete="off" spellcheck="false" inputmode="url">
+      <div class="packs-actions">
+        <button class="btn" id="server-save" data-i18n="server.save"></button>
+        <button class="btn" id="server-reset" data-i18n="server.reset"></button>
+      </div>
+      <div id="server-status" class="help"></div>
+    </div>
+    <!-- Attribution exigée par CC BY-SA 4.0 (données du Wiktionnaire) et licence de l'appli (ticket 017). -->
+    <div class="panel">
+      <h2 data-i18n="cfg.about"></h2>
+      <div id="cfg-about" class="about"></div>
+    </div>
+  </section>
+</main>
+
+<!-- Barre du bas : pages en icônes (maison, horloge, engrenage), langue de l'interface en texte. -->
+<nav class="nav">
+  <button data-page="main" data-i18n-title="nav.main" data-i18n-label="nav.main">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9v11.5h4.5v-6h4v6h4.5V9"/></svg>
+  </button>
+  <button data-page="history" data-i18n-title="nav.history" data-i18n-label="nav.history">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+    <span class="k">Alt+H</span>
+  </button>
+  <button data-page="config" data-i18n-title="nav.config" data-i18n-label="nav.config">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.91 9.97L21.27 9.93L21.27 14.07L18.91 14.03L18.32 15.45L20.02 17.09L17.09 20.02L15.45 18.32L14.03 18.91L14.07 21.27L9.93 21.27L9.97 18.91L8.55 18.32L6.91 20.02L3.98 17.09L5.68 15.45L5.09 14.03L2.73 14.07L2.73 9.93L5.09 9.97L5.68 8.55L3.98 6.91L6.91 3.98L8.55 5.68L9.97 5.09L9.93 2.73L14.07 2.73L14.03 5.09L15.45 5.68L17.09 3.98L20.02 6.91L18.32 8.55Z"/><circle cx="12" cy="12" r="3"/></svg>
+  </button>
+  <span id="nav-ui" class="nav-ui" role="group" data-i18n-title="cfg.interfaceHelp"></span>
+</nav>
+<div id="toast" class="toast" hidden></div>
+</body>
+</html>

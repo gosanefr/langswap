@@ -1,0 +1,59 @@
+#!/bin/sh
+# langswap — lancement à la demande (ticket 009 §6) et commandes du pipeline (ticket 010).
+#   langswap                 démarre le serveur s'il ne tourne pas, puis ouvre l'onglet
+#   langswap stop            arrête le serveur
+#   langswap build           extract → assemble → check (lit le jeu de dumps épinglé, jamais le réseau)
+#   langswap update          download d'un nouveau jeu de dumps, puis build
+#   langswap packs           packs de langue de l'appli Android (data/packs : .sqlite.xz + packs.json + LICENSE-DATA.md)
+#   langswap serve-packs     sert data/packs sur le réseau local (port 4766) pour le téléchargement depuis l'appli
+#   langswap publish-packs   publie data/packs sur GitHub (release packs-<build> + packs/packs.json) ; --dry-run d'abord
+set -e
+ROOT=$(dirname "$(readlink -f "$0")")/..
+PORT=${LANGSWAP_PORT:-4765}
+URL="http://localhost:$PORT/"
+STATE=${XDG_STATE_HOME:-$HOME/.local/state}/langswap
+NODE="node --no-warnings"
+
+ping() { curl -sf --max-time 0.3 "${URL}api/ping" 2>/dev/null | grep -q '"langswap":true'; }
+pid() { curl -sf --max-time 0.3 "${URL}api/ping" | sed -n 's/.*"pid":\([0-9]*\).*/\1/p'; }
+
+case "${1:-open}" in
+  open)
+    if ! ping; then
+      mkdir -p "$STATE"
+      nohup $NODE "$ROOT/server/server.mjs" >"$STATE/server.log" 2>&1 &
+      i=0
+      until ping; do
+        i=$((i + 1)); [ $i -gt 100 ] && { echo "The server did not start, see $STATE/server.log" >&2; exit 1; }
+        sleep 0.02
+      done
+    fi
+    xdg-open "$URL" >/dev/null 2>&1 &
+    ;;
+  stop)
+    p=$(pid || true); [ -n "$p" ] && kill "$p" && echo "Server stopped ($p)." || echo "No LangSwap server running."
+    ;;
+  build)
+    $NODE "$ROOT/pipeline/extract.mjs"
+    $NODE --max-old-space-size=12000 "$ROOT/pipeline/assemble.mjs"
+    $NODE "$ROOT/pipeline/check.mjs"
+    if ping; then "$0" stop; "$0" open; fi
+    ;;
+  update)
+    $NODE "$ROOT/pipeline/download.mjs"
+    "$0" build
+    ;;
+  packs)
+    $NODE "$ROOT/pipeline/packs.mjs"
+    ;;
+  publish-packs)
+    shift; $NODE "$ROOT/pipeline/publish-packs.mjs" "$@"
+    ;;
+  serve-packs)
+    PACKS_PORT=${LANGSWAP_PACKS_PORT:-4766}
+    [ -f "$ROOT/data/packs/packs.json" ] || { echo "No packs: run \`langswap packs\` first." >&2; exit 1; }
+    echo "Serving $ROOT/data/packs on port $PACKS_PORT (Ctrl+C to stop)"
+    exec python3 -m http.server "$PACKS_PORT" --bind 0.0.0.0 --directory "$ROOT/data/packs"
+    ;;
+  *) sed -n '2,9p' "$0"; exit 1 ;;
+esac

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sans barre de titre : l'interface web occupe tout l'écran. Android 8–9 : thème clair (pas de DayNight système). -->
+<resources>
+    <style name="LangSwap" parent="@android:style/Theme.DeviceDefault.Light.NoActionBar" />
+</resources>
