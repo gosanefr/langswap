@@ -7,6 +7,7 @@
 #   langswap packs           packs de langue de l'appli Android (data/packs : .sqlite.xz + packs.json + LICENSE-DATA.md)
 #   langswap serve-packs     sert data/packs sur le réseau local (port 4766) pour le téléchargement depuis l'appli
 #   langswap publish-packs   publie data/packs sur GitHub (release packs-<build> + packs/packs.json) ; --dry-run d'abord
+#   langswap release <x.y.z> publie une version de l'appli Android (APK/AAB signés, vérif. reproductible, tag, release) ; --dry-run d'abord
 set -e
 ROOT=$(dirname "$(readlink -f "$0")")/..
 PORT=${LANGSWAP_PORT:-4765}
@@ -49,11 +50,14 @@ case "${1:-open}" in
   publish-packs)
     shift; $NODE "$ROOT/pipeline/publish-packs.mjs" "$@"
     ;;
+  release)
+    shift; $NODE "$ROOT/pipeline/release.mjs" "$@"
+    ;;
   serve-packs)
     PACKS_PORT=${LANGSWAP_PACKS_PORT:-4766}
     [ -f "$ROOT/data/packs/packs.json" ] || { echo "No packs: run \`langswap packs\` first." >&2; exit 1; }
     echo "Serving $ROOT/data/packs on port $PACKS_PORT (Ctrl+C to stop)"
     exec python3 -m http.server "$PACKS_PORT" --bind 0.0.0.0 --directory "$ROOT/data/packs"
     ;;
-  *) sed -n '2,9p' "$0"; exit 1 ;;
+  *) sed -n '2,10p' "$0"; exit 1 ;;
 esac

@@ -1,0 +1,17 @@
+LangSwap traduce palabras sueltas entre francés, inglés y español, con alemán, italiano y portugués como idiomas secundarios. Todo funciona sin conexión: el diccionario se descarga una sola vez, idioma por idioma, y las búsquedas nunca salen del teléfono.
+
+<b>Funciones</b>
+<ul>
+<li>Escribe una palabra en cualquier idioma, o elige el idioma de origen; las traducciones se agrupan por significado, con género, categoría gramatical y región.</li>
+<li>Se reconocen las formas flexionadas: plurales, verbos conjugados y femeninos llevan a su palabra base.</li>
+<li>Si no hay traducción directa, LangSwap pasa por otro idioma (por ejemplo español → inglés → italiano) y lo indica.</li>
+<li>Toca una palabra traducida para copiarla o buscarla a su vez, sin teclado.</li>
+<li>Historial de búsquedas en el dispositivo, que se puede borrar entrada por entrada.</li>
+<li>Interfaz en francés, inglés y español; sigue el tema claro u oscuro del sistema.</li>
+</ul>
+
+<b>Diccionario</b>
+Construido a partir de Wikcionario (ediciones francesa, inglesa, española, alemana, italiana y portuguesa, extraídas por wiktextract) y descargado desde los ajustes de la aplicación: unos 66 MB para francés, inglés y español juntos. Datos con licencia CC BY-SA 4.0, © colaboradores de Wikcionario, modificados por LangSwap.
+
+<b>Software libre, sin rastreo</b>
+Sin cuenta, sin publicidad, sin estadísticas. Código fuente con licencia GPL-3.0-or-later: https://github.com/gosanefr/langswap

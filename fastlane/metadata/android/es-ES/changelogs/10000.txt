@@ -1,0 +1,1 @@
+Primera versión: diccionario sin conexión palabra a palabra en francés, inglés y español (más alemán, italiano y portugués), paquetes de idioma descargados desde los ajustes, resultados pensados para pantallas táctiles.

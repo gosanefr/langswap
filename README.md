@@ -14,6 +14,7 @@ langswap stop
 langswap packs         # packs de langue de l'appli Android (data/packs : .sqlite.xz + packs.json + LICENSE-DATA.md)
 langswap serve-packs   # sert data/packs sur le réseau local (port 4766) pour le téléchargement depuis l'appli
 langswap publish-packs --dry-run   # puis sans --dry-run : release GitHub packs-<build> + packs/packs.json (commit + push)
+langswap release 1.0.0 --dry-run   # appli Android : APK/AAB signés, vérification reproductible, puis tag + release GitHub
 ```
 
 Raccourcis : Alt+0 AUTO · Alt+1…6 source · Alt+Maj+1…6 destination · Alt+S inverser · Alt+M 1 langue / toutes · Alt+H historique.
@@ -49,6 +50,7 @@ Options : `--set=AAAA-MM-JJ` (extract/assemble), `--force` (extract), `--no-rena
 - `pipeline/` — construction de la base (`download` → `extract` → `assemble` → `check`) et des packs (`packs`).
 - `data/` — `langswap.sqlite` (lecture seule), `history.sqlite` (lecture-écriture), `packs/` (packs Android). `reports/` — rapports de `check`.
 - `bin/` — `langswap` (commande), `install` (commande + entrée de menu).
+- `fastlane/metadata/android/` — fiches Play / F-Droid (en/fr/es) ; `PRIVACY.md` — politique de confidentialité de l'appli.
 - `packs/packs.json` — manifeste des packs publiés, lu par l'appli (écrit par `publish-packs`, jamais à la main).
 - `tests/` — `node --test tests/*.test.mjs`.
 - `android/langswap/` — appli Android : l'interface `web/` dans une WebView, `server/search.mjs` tel quel, routes `/api/*` servies dans la page (`web/api.mjs`), SQLite embarqué via un pont Kotlin (`Bridge.kt`), packs de langue téléchargés depuis Config (`Packs.kt`). Construction, installation, débogage : [`android/langswap/README.md`](android/langswap/README.md).

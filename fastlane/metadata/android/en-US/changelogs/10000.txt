@@ -1,0 +1,1 @@
+First release: offline word-by-word dictionary for French, English and Spanish (plus German, Italian, Portuguese), language packs downloaded from the settings, touch-friendly results.

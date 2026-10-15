@@ -1,0 +1,1 @@
+Première version : dictionnaire hors ligne mot à mot français, anglais, espagnol (plus allemand, italien, portugais), packs de langue téléchargés depuis les réglages, résultats pensés pour le tactile.

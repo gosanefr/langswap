@@ -1,0 +1,17 @@
+LangSwap translates single words between French, English and Spanish, with German, Italian and Portuguese as secondary languages. Everything works offline: the dictionary is downloaded once, one language at a time, and searches never leave your phone.
+
+<b>Features</b>
+<ul>
+<li>Type a word in any language, or pick the source language; translations are grouped by meaning, with gender, part of speech and region.</li>
+<li>Inflected forms are recognised: plurals, conjugated verbs, feminine forms lead to their base word.</li>
+<li>When no direct translation exists, LangSwap goes through another language (for example Spanish → English → Italian) and says so.</li>
+<li>Tap a translated word to copy it, or to search it in turn — no keyboard needed.</li>
+<li>Search history on the device, deletable entry by entry.</li>
+<li>Interface in French, English and Spanish; follows the system light/dark theme.</li>
+</ul>
+
+<b>Dictionary</b>
+Built from Wiktionary (French, English, Spanish, German, Italian and Portuguese editions, extracted by wiktextract) and downloaded from the app's settings: about 66 MB for French, English and Spanish together. The data is licensed under CC BY-SA 4.0, © Wiktionary contributors, modified by LangSwap.
+
+<b>Free software, no tracking</b>
+No account, no ads, no analytics. Source code under GPL-3.0-or-later: https://github.com/gosanefr/langswap

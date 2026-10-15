@@ -580,6 +580,7 @@ async function renderAbout() {
     m.builtAt ? esc(t('about.build', m.dumpSet, new Date(m.builtAt).toLocaleDateString(t('locale')))) : '',
     t('about.app', esc(A.app?.version ?? ''), link(A.codeLicense.url, A.codeLicense.name), link(A.source)),
     t('about.packs', link(A.source + '/releases')),
+    A.app ? t('about.privacy', link(A.source + '/blob/main/PRIVACY.md', 'PRIVACY.md')) : '',
     A.app ? esc(t('about.thirdParty')) : '',
   ].filter(Boolean).map(p => `<p>${p}</p>`).join('');
 }

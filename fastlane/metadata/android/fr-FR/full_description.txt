@@ -1,0 +1,17 @@
+LangSwap traduit des mots isolés entre le français, l'anglais et l'espagnol, avec l'allemand, l'italien et le portugais en langues secondaires. Tout fonctionne hors ligne : le dictionnaire est téléchargé une fois, langue par langue, et les recherches ne quittent jamais le téléphone.
+
+<b>Fonctions</b>
+<ul>
+<li>Tapez un mot dans n'importe quelle langue, ou choisissez la langue source ; les traductions sont regroupées par sens, avec le genre, la nature et la région.</li>
+<li>Les formes fléchies sont reconnues : pluriels, verbes conjugués, féminins mènent à leur mot de base.</li>
+<li>Faute de traduction directe, LangSwap passe par une autre langue (par exemple espagnol → anglais → italien) et l'indique.</li>
+<li>Touchez un mot traduit pour le copier ou le chercher à son tour, sans clavier.</li>
+<li>Historique des recherches sur l'appareil, effaçable entrée par entrée.</li>
+<li>Interface en français, anglais et espagnol ; suit le thème clair ou sombre du système.</li>
+</ul>
+
+<b>Dictionnaire</b>
+Construit à partir du Wiktionnaire (éditions française, anglaise, espagnole, allemande, italienne et portugaise, extraites par wiktextract) et téléchargé depuis les réglages de l'appli : environ 66 Mo pour le français, l'anglais et l'espagnol ensemble. Données sous licence CC BY-SA 4.0, © contributeurs du Wiktionnaire, modifiées par LangSwap.
+
+<b>Logiciel libre, sans pistage</b>
+Pas de compte, pas de publicité, pas de statistiques. Code source sous GPL-3.0-or-later : https://github.com/gosanefr/langswap
