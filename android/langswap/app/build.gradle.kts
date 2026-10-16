@@ -46,6 +46,9 @@ android {
         release {
             // Pas de R8 : gain faible, risque sur le pont @JavascriptInterface et sur la reproductibilité.
             isMinifyEnabled = false
+            // Pas de META-INF/version-control-info.textproto (commit git) : son contenu dépend de l'endroit où le
+            // dépôt est cloné, et l'APK doit être identique ici, dans android/repro et chez F-Droid.
+            vcsInfo.include = false
             signingConfig = releaseKey
         }
     }
