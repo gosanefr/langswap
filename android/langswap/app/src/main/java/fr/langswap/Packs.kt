@@ -90,10 +90,11 @@ class Packs(
         refresh()
     }
 
-    /** Installe exactement `langs` : base + un pack par langue. */
+    /** Installe exactement `langs` : base + un pack par langue ; aucune langue = tout désinstaller. */
     fun apply(langs: List<String>) {
-        val m = manifest ?: error("no manifest (server unreachable?)")
         if (status.optString("state") in setOf("downloading", "installing")) error("already downloading")
+        if (langs.isEmpty()) return removeAll()
+        val m = manifest ?: error("no manifest (server unreachable?)")
         val files = m.getJSONObject("files")
         val all = m.getJSONArray("langs").let { a -> List(a.length()) { a.getString(it) } }
         require(langs.isNotEmpty() && langs.all { it in all }) { "unknown languages: $langs" }
@@ -119,6 +120,24 @@ class Packs(
             } catch (e: Exception) {
                 Log.e("langswap", "packs", e)
                 tmp.deleteRecursively()
+                status = JSONObject().put("state", "error").put("error", e.message ?: e.toString())
+            }
+        }
+    }
+
+    /** Supprime tous les packs (sans manifeste : possible hors connexion). */
+    private fun removeAll() {
+        status = JSONObject().put("state", "installing").put("file", "").put("done", 0).put("total", 0)
+        worker.execute {
+            try {
+                swap {
+                    for (f in dir.listFiles().orEmpty()) if (f.name.endsWith(".sqlite")) f.delete()
+                    installedFile.delete()
+                }
+                status = JSONObject().put("state", "done")
+                Log.i("langswap", "packs removed")
+            } catch (e: Exception) {
+                Log.e("langswap", "packs", e)
                 status = JSONObject().put("state", "error").put("error", e.message ?: e.toString())
             }
         }

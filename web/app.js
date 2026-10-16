@@ -26,6 +26,7 @@ const save = () => { for (const k of ['src', 'dst', 'mode', 'showSecondary', 'se
 setUiLang(S.ui);
 applyStaticTexts();
 const configured = () => [...PRIMARY, ...SECONDARY.filter(l => S.secondary.includes(l))];
+const noPacks = () => CFG.packs && !configured().length;
 if (S.src && !configured().includes(S.src)) S.src = null;
 if (!configured().includes(S.dst)) S.dst = 'en';
 
@@ -138,7 +139,8 @@ function rerun() { if (field.value.trim()) lookUp(field.value, { setting: true }
 async function lookUp(input, { live = false, enter = false, setting = false, parentId = null, historyEntry = null } = {}) {
   syncClear();
   const n = ++seq;
-  if (!input.trim()) { R = null; current = null; renderResult(); return; }
+  // Appli Android sans pack : pas de requête, renderResult affiche « aucune langue installée ».
+  if (!input.trim() || noPacks()) { R = null; current = null; renderResult(); return; }
   const p = new URLSearchParams({ q: input, langs: configured().join(','), pivot: S.pivot });
   if (S.src) p.set('src', S.src);
   if (S.mode === 'one') p.set('dst', S.dst);
@@ -198,7 +200,7 @@ function renderResult() {
   const div = $('#result');
   closeBubble();
   div.classList.remove('stale');
-  if (!R) { div.innerHTML = field.value.trim() ? '' : `<div class="empty">${CFG.packs && !configured().length ? t('packs.none') : t('typeWord', S.src ? NAMES[S.src] : null)}</div>`; return; }
+  if (!R) { div.innerHTML = field.value.trim() && !noPacks() ? '' : `<div class="empty">${noPacks() ? t('packs.none') : t('typeWord', S.src ? NAMES[S.src] : null)}</div>`; return; }
   const showLang = S.src == null || R.fallback;
   const fallback = R.fallback ? `<div class="fallback">${t('fallback', NAMES[S.src])}</div>` : '';
   const more = R.more ? `<div class="help">${t('moreMatches', R.more)}</div>` : '';
@@ -468,6 +470,8 @@ new IntersectionObserver(es => { if (es.some(e => e.isIntersecting) && S.page ==
 
 // ---------- page Config ----------
 function renderConfig() {
+  // Appli Android : seulement les langues installées, rien avant le premier téléchargement.
+  $('#cfg-langs-help').textContent = noPacks() ? t('packs.none') : t('cfg.langsHelp', PRIMARY.map(l => l.toUpperCase()).join(' '));
   $('#cfg-langs').innerHTML = SECONDARY.map(l => `<label class="chip ${S.secondary.includes(l) ? 'on' : ''}" data-l="${l}">${l.toUpperCase()} · ${NAMES[l]}</label>`).join('');
   $('#cfg-pivot').innerHTML = ['complement', 'fallback', 'off'].map(v => `<label><input type="radio" name="pivot" value="${v}" ${S.pivot === v ? 'checked' : ''}> ${t('pivot.' + v)}</label>${v !== 'off' ? `<div class="help">${t('pivot.' + v + 'Help')}</div>` : ''}`).join('');
   $('#cfg-clear').innerHTML = `<button class="btn danger" id="clear">${t('clearAll')}</button>`;
@@ -499,27 +503,27 @@ function renderPacks() {
     return;
   }
   const installed = s.installed?.langs ?? m.langs.filter(l => s.present.includes('pack-' + l));
-  P.choice ??= installed.length ? [...installed] : m.langs.filter(l => ['fr', 'en', 'es'].includes(l));
+  P.choice ??= [...installed];   // premier lancement : rien de coché, à chacun ses langues
   const st = s.status ?? {}, busy = ['downloading', 'installing'].includes(st.state);
   const sameBuild = s.installed?.build === m.build;
   const update = installed.length > 0 && !sameBuild;
   // Fichiers voulus pour ce choix (comme Packs.kt) : base + packs cochés.
-  const wanted = ['base', ...P.choice.map(l => 'pack-' + l)];
+  const wanted = P.choice.length ? ['base', ...P.choice.map(l => 'pack-' + l)] : [];
   const mb = b => Math.round(b / 1e6);
   const download = wanted.filter(n => !sameBuild || !s.present.includes(n)).reduce((a, n) => a + m.files[n].bytes, 0);
   const disk = wanted.reduce((a, n) => a + m.files[n].sqliteBytes, 0);
   const changed = update || download > 0 || [...P.choice].sort().join() !== [...installed].sort().join();
   const rows = m.langs.map(l => `<label class="pack-row"><input type="checkbox" data-l="${l}" ${P.choice.includes(l) ? 'checked' : ''} ${busy ? 'disabled' : ''}>`
-    + `<b>${l.toUpperCase()}</b> ${esc(NAMES[l])} ${installed.includes(l) ? `<span class="tag">${t('packs.installed')}</span>` : ''}`
+    + `<b>${l.toUpperCase()}</b> ${esc(NAMES[l])} ${installed.includes(l) ? `<span class="tag on">${t('packs.installed')}</span>` : `<span class="tag">${t('packs.notInstalled')}</span>`}`
     + `<span class="size">${mb(m.files['pack-' + l].bytes)} ${t('packs.mb')}</span></label>`).join('');
   let status = '';
   if (busy) status = `${esc(st.state === 'installing' ? t('packs.installing', st.file) : t('packs.downloading', st.file, mb(st.done), mb(st.total)))}<progress value="${st.done}" max="${st.total}"></progress>`;
   else if (st.state === 'error') status = esc(t('packs.error', st.error));
   else if (update) status = esc(t('packs.update', new Date(m.build).toLocaleDateString(t('locale'))));
-  const tooFew = P.choice.length < 2;
+  const tooFew = P.choice.length === 1;   // aucune langue cochée : tout désinstaller
   box.innerHTML = rows + (status ? `<div class="packs-status">${status}</div>` : '')
     + (tooFew ? `<div class="help">${t('packs.tooFew')}</div>` : '')
-    + `<div class="packs-actions"><button class="btn" id="packs-apply" ${busy || tooFew || !changed ? 'disabled' : ''}>${t('packs.apply', mb(download), mb(disk))}</button></div>`;
+    + `<div class="packs-actions"><button class="btn" id="packs-apply" ${busy || tooFew || !changed ? 'disabled' : ''}>${P.choice.length ? t('packs.apply', mb(download), mb(disk)) : t('packs.removeAll')}</button></div>`;
 }
 $('#cfg-packs').addEventListener('change', e => {
   const l = e.target.dataset.l; if (!l) return;
@@ -660,4 +664,4 @@ document.addEventListener('keydown', e => {
 if (CFG.packs) $('#panel-packs').hidden = $('#panel-advanced').hidden = false;
 renderBars();
 renderResult();
-goTo(CFG.packs && !configured().length ? 'config' : 'main');
+goTo(noPacks() ? 'config' : 'main');

@@ -109,7 +109,7 @@ const routes = {
     return { ok: true };
   },
   'POST /api/packs': (u, b) => {
-    if (!Array.isArray(b.langs) || !b.langs.length) throw httpError(400, 'langs required');
+    if (!Array.isArray(b.langs)) throw httpError(400, 'langs required');   // [] : tout désinstaller
     read(bridge.packsApply(JSON.stringify(b.langs))); return { ok: true };
   },
 };
